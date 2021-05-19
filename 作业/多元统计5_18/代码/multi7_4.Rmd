@@ -1,0 +1,106 @@
+---
+title: "7.4"
+output: html_notebook
+---
+
+
+
+## 读取数据
+
+```{r}
+rm(list = ls())
+library(ggbiplot)
+pendigit <- read.table("pendigits.tes.txt",sep = ",")
+head(pendigit)
+```
+
+## 计算方差
+
+```{r}
+apply(pendigit[, 1:16], 2, var)
+apply(pendigit[, 1:16], 2, sd)
+```
+
+## PCA
+
+* 基于协方差阵
+
+```{r}
+pca1 <- princomp(pendigit[,1:16])
+summary(pca1)
+ggscreeplot(pca1) # 碎石图
+```
+
+5个主成分占了80%，7个主成分占了90%
+
+### 散点图
+
+* 数据整合
+
+只展示前3个主成分
+
+```{r}
+pc_score <- data.frame(pca1$scores[,1:3], factor(pendigit$V17))
+rownames(pc_score) <- 1:3498
+colnames(pc_score)[4] <- "number"
+head(pc_score)
+```
+
+* 三维情况
+
+```{r}
+library(deSolve)
+library(gg3D)
+theta=-30 #方位角的度数
+phi=0 # 渐近线
+p0 <- ggplot(pc_score, aes(x=Comp.1, y=Comp.2, z=Comp.3 , colour= number)) + 
+  axes_3D(theta=theta, phi=phi) + 
+  stat_3D(theta=theta, phi=phi) + 
+  #axis_labs_3D(theta=theta, phi=phi) +
+  labs_3D(theta=theta, phi=phi,hjust=c(1,0,1),vjust=c(2,3.5,1) ,size=5, labs = c("Comp.1", "Comp.2", "Comp.3")) + 
+  theme_void()
+p0
+
+
+```
+
+
+* 第1和第2主成分
+
+```{r}
+p1 <- ggplot(pc_score, aes(x=Comp.1, y=Comp.2, colour= number))+geom_point()
+p1
+```
+
+* 第1和第3主成分
+
+```{r}
+p2 <- ggplot(pc_score, aes(x=Comp.1, y=Comp.3, colour= number))+geom_point()
+p2
+```
+
+* 第2和第3主成分的pc score图
+
+```{r}
+p3 <- ggplot(pc_score, aes(x=Comp.2, y=Comp.3, colour= number))+geom_point()
+p3
+```
+
+
+```{r}
+library(ggpubr)
+ggarrange(p0, p1, p2, p3,
+          ncol = 2, nrow =2,align = "hv",common.legend = TRUE,legend="bottom")
+```
+
+
+# 7.5 碎石图
+
+```{r}
+ggscreeplot(pca1)
+p_scre <- data.frame(PC = c(1:16) , Variances = pca1$sdev^2)
+ggplot(p_scre,aes(x=PC, y=Variances, group=1)) + geom_line() + geom_point(size=2)
+summary(pca1)
+```
+
+保留5个
