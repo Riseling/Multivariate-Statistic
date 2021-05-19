@@ -1,0 +1,36 @@
+---
+title: "The Nutritional Value of Food"
+output: html_notebook
+---
+
+本文复现书中7.2.1的例子
+
+* 读取数据
+
+```{r}
+library(ggplot2)
+food <- read.table("food.data.txt", header = TRUE)
+food <- food[,9:14]
+
+pc_food <- princomp(food, cor = TRUE)
+
+if (FALSE){
+  "
+  也可以写成，提前标准化
+  food <- scale(food)
+  pc_food <- princomp(food)
+  "
+}
+
+summary(pc_food)
+load <- loadings(pc_food)
+
+pc_score <- as.data.frame(pc_food$scores)
+rownames(pc_score) <- 1:961
+head(pc_score)
+
+#主成分1 VS 主成分2的得分散点图
+ ggplot(pc_score, aes(x=Comp.1,y=Comp.2))+geom_point()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+```
+
+
