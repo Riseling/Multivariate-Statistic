@@ -1,0 +1,38 @@
+---
+title: "7.9"
+output: html_notebook
+---
+
+```{r}
+rm(list = ls())
+library(ggplot2)
+library(ggbiplot)
+library(ggpubr)
+```
+
+```{r}
+iris_pca <- princomp(iris[,1:4])
+pc_score <- data.frame(iris_pca$scores,factor(iris$Species))
+rownames(pc_score) <- 1:150
+colnames(pc_score)[5] <- "Species"
+head(pc_score)
+
+# 第1和第2主成分的pc score图
+p1 <- ggplot(pc_score, aes(x=Comp.1, y=Comp.2, colour = Species))+geom_point() #+ coord_fixed()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+
+#ggbiplot(d1_pca, choices = 1:2)
+
+# 第1和第3主成分的pc score图
+p2 <- ggplot(pc_score, aes(x=Comp.1, y=Comp.3, colour = Species))+geom_point()#+ coord_fixed()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+
+#ggbiplot(d1_pca, choices = c(1,3))
+
+# 第2和第3主成分的pc score图
+p3 <- ggplot(pc_score, aes(x=Comp.2, y=Comp.3, colour = Species))+geom_point()#+ coord_fixed()
+
+ggarrange(p1, p2, p3, 
+          ncol = 2, nrow = 2, align = "hv",
+          common.legend = TRUE,
+          legend="bottom")
+```
+

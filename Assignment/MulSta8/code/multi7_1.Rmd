@@ -1,0 +1,144 @@
+---
+title: "多元统计作业1代码"
+output: html_notebook
+---
+
+# 7.1
+
+```{r}
+library(ggplot2)
+library(MASS)
+library(ggbiplot)
+library(ggpubr)
+```
+
+
+n=100 r=3 的n维高斯分布
+使用协方差矩阵和相关矩阵执行PCA
+找到特征值和特征向量，画碎石图，计算PC scores，画所有配对PC scores
+
+```{r}
+# 生成随机数据
+set.seed(1)
+n<-100
+sigma <- matrix(c(10,1,1,1,1,1,1,1,1),3,3)
+data1 <- as.data.frame(mvrnorm(n,mu=c(0,0,0),sigma))
+colnames(data1) <- c("X1","X2","X3")
+```
+
+
+## 使用协方差阵进行主成分分析
+
+* 特征值和特征向量
+
+```{r}
+# 主成分分析：协方差阵
+d1_pca <- princomp(data1)
+#summary(d1_pca,loadings=TRUE)
+
+# 特征值和特征向量
+load1 <- loadings(d1_pca) # 主成分对应的各列
+d1_pca$sdev^2    # 特征值
+load1[,]      # 对应的特征向量
+```
+
+* 碎石图
+
+```{r}
+ggscreeplot(d1_pca)
+# screeplot(d1_pca,type="lines")
+# 碎石图
+p_scre <- data.frame(PC = paste0("Comp.", 1:3) , Variances = d1_pca$sdev^2)
+ggplot(p_scre,aes(x=PC, y=Variances, group=1)) + geom_line() + geom_point(size=2)
+```
+
+* PC scores
+
+```{r}
+library(scales)
+pc_score <- as.data.frame(d1_pca$scores)
+rownames(pc_score) <- 1:100
+head(pc_score)
+
+# 第1和第2主成分的pc score图
+p1 <- ggplot(pc_score, aes(x=Comp.1,y=Comp.2))+geom_point()#+coord_fixed()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+
+#ggbiplot(d1_pca, choices = 1:2)
+
+# 第1和第3主成分的pc score图
+p2 <- ggplot(pc_score, aes(x=Comp.1,y=Comp.3))+geom_point()+scale_y_continuous(labels = scientific)#+coord_fixed()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+
+#ggbiplot(d1_pca, choices = c(1,3))
+
+# 第2和第3主成分的pc score图
+p3 <- ggplot(pc_score, aes(x=Comp.2,y=Comp.3))+geom_point()+scale_y_continuous(labels = scientific)#+coord_fixed()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+
+#ggbiplot(d1_pca, choices = 2:3)+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=2)
+
+ggarrange(p1, p2, p3, 
+          ncol = 3, nrow = 1,align = "hv")
+```
+
+## 使用相关矩阵进行主成分分析
+
+```{r}
+d2_pca <- princomp(data1,cor = TRUE)
+summary(d2_pca, loadings = TRUE)
+```
+
+* 特征值和特征向量
+
+```{r}
+# 特征值和特征向量
+load2 <- loadings(d2_pca)
+d2_pca$sdev^2    # 特征值
+load2[,]      # 对应的特征向量
+```
+
+* 碎石图
+
+```{r}
+ggscreeplot(d2_pca)
+# screeplot(d2_pca,type="lines")
+# 碎石图
+p2_scre <- data.frame(PC = paste0("Comp.", 1:3) , Variances = d2_pca$sdev^2)
+ggplot(p2_scre,aes(x=PC, y=Variances, group=1)) + geom_line() + geom_point(size=2)+ylim(0,2)
+```
+
+* PC score
+
+```{r}
+pc2_score <- as.data.frame(d2_pca$scores)
+rownames(pc2_score) <- 1:100
+head(pc2_score)
+
+# 第1和第2主成分的pc score图
+pp1 <- ggplot(pc2_score, aes(x=Comp.1,y=Comp.2))+geom_point()#+coord_fixed()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+
+#ggbiplot(d1_pca, choices = 1:2)
+
+# 第1和第3主成分的pc score图
+pp2 <- ggplot(pc2_score, aes(x=Comp.1,y=Comp.3))+geom_point()#+coord_fixed()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+
+#ggbiplot(d1_pca, choices = c(1,3))
+
+# 第2和第3主成分的pc score图
+pp3 <- ggplot(pc2_score, aes(x=Comp.2,y=Comp.3))+geom_point()#+coord_fixed()#+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=3)
+
+#ggbiplot(d1_pca, choices = 2:3)+geom_text(aes(label = rownames(pc_score)),vjust=-0.5,size=2)
+
+ggarrange(pp1, pp2, pp3, 
+          ncol = 3, nrow = 1,align = "hv")
+```
+
+
+
+```{r}
+mux <- colMeans(data1)   
+myfun <- function(x){x-mux}
+xc <- apply(data1,1,myfun)
+esig <- (xc %*% t(xc))/(n)
+ev <- eigen(esig)
+```
+
+
